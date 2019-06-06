@@ -15,7 +15,9 @@ https://www.rstudio.com/products/rstudio/download/preview/
 If you're not on the most recent version, take the time to update now.
 
 ## Download course materials
+In your R console run the following code: 
+
 `install.packages("usethis")`
 `usethis::use_course("https://github.com/margarethannum/qsure_training_r/archive/master.zip")`
 
-Answer questions - and course will automatically open up the R Project with the training! 
+Answer questions "Yes" - and course will automatically download and open up the R Project with the training materials! 
