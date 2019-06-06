@@ -1,5 +1,20 @@
 # qsure_training_r
 
+## R
+
+Install a pre-compiled binary of R for your OS from here:
+https://cloud.r-project.org
+
+If you're not on the most recent version, take the time to update now.
+
+## RStudio
+
+Install RStudio Desktop.  Download it here:
+https://www.rstudio.com/products/rstudio/download/preview/
+
+If you're not on the most recent version, take the time to update now.
+
+## Download course materials
 `install.packages("usethis")`
 `usethis::use_course("https://github.com/margarethannum/qsure_training_r/archive/master.zip")`
 
