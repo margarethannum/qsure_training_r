@@ -1,0 +1,620 @@
+---
+title: "QSURE R Training: Session 1"
+author: "Margie Hannum"
+output: 
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  error = TRUE)
+```
+
+# R, Rstudio, Open source philosophy
+
+
+**R** is an object-oriented programming language and environment for statistical computing and graphics. R is an integrated suite of software facilities for data manipulation, calculation and graphical display. Open sourced. 
+*Semi-official definition from https://www.r-project.org/about.html *
+
+
+**RStudio** is an integrated development environment (IDE) for R. It includes a console, syntax-highlighting code editor that supports direct code execution, as well as tools for plotting, history, debugging and work space management. *Definition from https://www.rstudio.com/products/RStudio/ *
+
+**Open source** means the original source code is freely available, and can be distributed and modified. 
+In R's case, it also means users can contribute to the usefulness by creating packages, which implement specialized functions for all kinds of uses (e.g. statistical methods, graphical capabilities, reporting tools). 
+Added Bonus: vibrant R community!
+
+# Setting up 
+
+## R
+
+Install a pre-compiled binary of R for your OS from here:
+https://cloud.r-project.org
+
+If you're not on the most recent version, take the time to update now.
+
+## RStudio
+
+Install RStudio Desktop.  Download it here:
+https://www.rstudio.com/products/rstudio/download/preview/
+
+If you're not on the most recent version, take the time to update now.
+
+### Installing Packages
+
+From within Rstudio's R Console, run the following script one row at a time to install needed packages.
+
+```{r, eval=FALSE}
+install.packages(c("devtools", "remotes"))
+install.packages("tidyverse")
+install.packages(c("lubridate", "here"))
+install.packages(c("survival", "survminer", "readxl"))
+remotes::install_github("ddsjoberg/gtsummary")
+```
+  
+
+# R Basics
+
+## Data Structures and Basic Syntax
+
+R has 5 basic data structures: vector, matrix, arrays, list, and data frames. The one people will be most comfortable with initially is the data frame. It is most similar to an excel spreadsheet/statistical data file. 
+
+###Defining data types & Structures
+
+R basic data types: 
+
+* Logical (`TRUE`)
+* integer (`1`)
+* numeric (a.k.a. double) (`1.2`)
+* character(`"Age"`)
+* complex (nobody ever uses these really)
+
+Note there are also data structures:
+
+* vector (`c(1, 2, 3)`)
+* matrix: 2d vector
+* array: nd vector
+* list (list(c(1, "a", 3))
+* data frame (type of list)
+
+
+Each data structure has unique properties. 
+
+```{r}
+
+dimtypes <- data.frame(
+  Levels = c("1d", "2d", "nd"),
+  Homogeneous = c("Vector", "Matrix", "Array"),
+  Heterogeneous = c("List", "Data Frame", NA),
+  stringsAsFactors = FALSE
+)
+
+knitr::kable(dimtypes)
+```
+
+Also you can do things with *attributes*
+
+* dates (e.g. `2019-06-06`) (For more, see [dates](#Dates) section for more)
+* factors: an integer vector with "factor" `class` attribute and predefined `levels` of allowed values (see [Factors](#Factors) section for more)
+
+If you mix data types in a vector or data frame column R will not preserve both data types, but instead covert them to one type or the other. 
+
+There is a hierarchy to what R will coerce, generally: logical < integer < numeric < complex < character < list
+
+```{r}
+
+# Logical < numeric
+c(TRUE, 1)
+
+# integer < numeric
+c(2.3, 4)
+
+# numeric < character
+c("a", 1)
+
+# integer < character
+c(factor("a"), "b")
+```
+
+But if you make a data frame/list it preserves the classes.
+```{r}
+data.frame(v1 = "a", v2 = 1, stringsAsFactors = FALSE)
+```
+
+
+##Identifying what kind of data you have
+
+There are several commands that are useful to get a feel for your data. 
+
+`colnames()` and `rownames()` will get you the column names of the data set and rownames will get you the rownames if they exist or return row numbers
+
+`ncol()` and `nrow()` will give you the total count of columns and rows respectively 
+
+`class()`, `str()`, `attributes()` will give you meta-information on the object you put into the function
+
+`head()`, `tail()` show the top or bottom rows of your df, and `View()` will show the whole dataframe (df). 
+
+These are a few good ones to start with. 
+
+You can play around with the `lung` dataset from the survival package to explore a data frame. 
+```{r}
+library(survival)
+
+colnames(lung)
+
+str(lung)
+
+```
+
+Guess what, you also just use some functions in R! (`colnames()`)
+
+A *function* is another building block in R. We'll go into how to create functions in another course, but for now, know that functions take input, perform a specific job(s), and returns output. 
+
+In R, function form is generally <name_of_function>()
+
+## General things
+
+* `?` is your friend if you want to look at documentation! (e.g. type `?mean()` in the console)
+
+* `<-` is the assignment operator 
+ 
+* example: assigning 'v1' as a vector with the values 1,2, and 3. You can call this vector by typing a into the console. 
+ 
+```{r} 
+v1 <- c(1, 2, 3)
+v1
+```
+
+
+ + R is case sensitive, bE cArEfUl! 
+
+
+# tidyverse overview
+```{r}
+library(tidyverse)
+tidyverse_logo()
+```
+
+
+The `tidyverse` package is a collection of `R` packages designed for data analysis, all of which share a similar design, grammar, and structure.
+
+packages automatically loaded in the tidyverse:
+
+  - [**`readr`**](https://readr.tidyverse.org/)
+      - data import/export
+  - [**`tibble`**](http://tibble.tidyverse.org/)
+      - re-imagined data frames
+  - [**`dplyr`**](https://dplyr.tidyverse.org/)
+      - data manipulation
+  - [**`tidyr`**](http://tidyr.tidyverse.org/)
+      - data manipulation
+  - [**`ggplot2`**](http://ggplot2.tidyverse.org/)
+      - graphics and visualization
+  - [**`purr`**](https://purrr.tidyverse.org/)
+      - functional programming toolkit, replaces the need for many loops
+  - [**`stringr`**](http://stringr.tidyverse.org/)
+      - string manipulation
+  - [**`forcats`**](http://forcats.tidyverse.org/)
+      - re-imagined factor data types
+      
+There are several additional packages which are installed as part of the tidyverse, but are not loaded by default.      
+      
+tidyverse has been developed and significantly improved in the last few years, with a lot of ongoing work being done to further increase usability.
+
+**The tidyverse is designed to make your life easier!** Every `R` script I write begins with loading the tidyverse package.
+
+when you load the tidyverse package, all of the above packages will automatically be loaded, and any conflicts with currently loaded packages will be noted.
+
+# mpg data set
+
+In many the examples below, we will use the [`mpg`](http://ggplot2.tidyverse.org/reference/mpg.html) data set which is included in the `ggplot2` package
+
+Let's review the data structure and data types you see. 
+
+```{r}
+str(mpg)
+
+head(mpg)
+```
+
+# `readr` data import/export
+
+The readr package provides the necessary functions for data import/export, replacing base ``R`` functions like `read.csv()` and `write.csv()`
+
+`write_csv()` is useful for saving data frames, and excludes row numbers in the results, in contrast to `write.csv()`
+
+```{r eval=FALSE}
+
+write_csv(
+  x = mpg,
+  path = here::here("/scratch/MPG data.csv")
+)
+```
+
+`read_csv()` provides better functionality than `read.csv()` as it does a nice job of assessing variable types when reading in the data, and will clearly indicate conflicts/issues it sees in the data.
+
+```{r}
+read_csv(file = here::here("/scratch/MPG data.csv"))
+```
+
+In practice, you may often receive data in .xls or .xlsx format. The `readxl` package provides the necessary functions for reading in these file types.
+
+`readxl` is included when installing the tidyverse package, but must be explicitly loaded. There are several arguments in `readxl` which make extracting information easy.
+
+
+```{r}
+library(readxl)
+
+read_excel(path = here::here("/scratch/MPG data.xlsx"))
+```
+
+# `tibble` reimagined data frames
+
+tibbles are a minor variation of the typical data.frame, which provide more informative output when printing data, and also limits the number of records printed. This is particularly nice when you have a very large data frame which if printed traditionally would fill up the console.
+
+```{r}
+
+mpg
+
+data.frame(mpg)[1:20, ]
+```
+
+tibbles also never convert characters to factors, only recycle arguments of length 1, and never create row names.
+
+```{r}
+
+tmp <- data.frame(
+  var_1 = 1:10,
+  var_2 = letters[1:2]
+)
+
+tmp
+
+str(tmp)
+
+tibble(
+  var_1 = 1:10,
+  var_2 = letters[1:10]
+)
+
+tibble(
+  var_1 = 1:10,
+  var_2 = 1:2
+)
+```
+
+# `dplyr` data manipulation
+
+## overview
+
+The `dplyr` package provides a grammar for data manipulation making data formatting, summarization, and analysis easier to program and more readable to others.
+
+A few of the key functions (verbs) in dplyr are:
+
+  - `select()`
+  - `mutate()`
+  - `filter()`
+  - `arrange()`
+  - `group_by()`
+  - `summarize()`
+  
+All of the previous take a data frame as input, and return a data frame as output.
+
+## aside : pipes (`%>%`)
+
+The pipe (`%>%`) is included as part of the `magrittr` package and facilitates passing arguments from one function to another. The pipe operator takes the information on the left hand side, and provides it as the first argument to the right hand side.
+
+```{r}
+
+vals <- c(1:4)
+
+sum(vals)
+
+vals %>% sum()
+```
+
+
+Passing arguments forward in this manner can greatly reduce the amount of code needed to complete an operation, and makes nested functions easier to read.
+
+```{r}
+
+round(sqrt(sum(vals)), 3)
+
+vals %>%
+  sum() %>%
+  sqrt() %>%
+  round(3)
+```
+
+RStudio also integrates the pipe operator in code completion (tab).
+
+## usage
+
+`select()` can be used to pull out or remove certain variables. 
+
+```{r}
+# include variables
+select(mpg, model, displ)
+
+mpg[, c("model", "displ")]
+
+# exclude variables
+select(mpg, -model, -displ)
+
+mpg[, !names(mpg) %in% c("model", "displ")]
+```
+
+Notice above that `R` knows to look for the variables `model` and `displ` in the data frame `mpg` (non-standard evaluation). In base `R` something like the following doesn't work unless we explicitly provide the name as a character
+
+```{r}
+mpg[, model]
+```
+
+There are also a number of helper functions which can be used inside of `select()` to identify variables. See the help file [`?select()`](https://dplyr.tidyverse.org/reference/select.html) for details 
+
+`dplyr` verbs work nicely when combined with the pipe operator
+
+```{r}
+mpg %>%
+  select(model, displ)
+```
+
+`mutate()` can be used to create new variables or edit current variables. 
+
+```{r}
+
+mpg %>%
+  select(model, displ) %>%
+  mutate(
+    # make new squared variable
+    displ_sqrd = displ^2,
+    # make a variable of row numbers
+    row_number = 1:n(),
+    row_number_sqrt = sqrt(row_number),
+    model = paste0("model : ", model)
+  )
+```
+
+Notice above the use of `n()` which return the number of rows in the data frame provided to `mutate()` above.
+
+Notice that using the pipe operator simplifies the manipulation as opposed to doing the same operation as below which requires typing `tmp$` many times. The `dplyr` verb usage above also clearly separates what we are trying to achieve into specific sections and operations.
+
+```{r}
+tmp <- mpg[, c("model", "displ")]
+
+tmp$displ_sqrt <- tmp$displ^2
+
+tmp$row_number <- 1:nrow(tmp)
+
+tmp$row_number_sqrt <- sqrt(tmp$row_number)
+
+tmp$model <- paste0("model :", tmp$model)
+
+tmp
+```
+
+`filter()` can be used to subset a data frame based on a logical condition.
+
+```{r}
+mpg %>%
+  filter(cty >= 20)
+
+mpg[mpg$cty >= 20, ]
+```
+
+Multiple conditions are treated as being combined by `&`. 
+
+```{r}
+mpg %>%
+  filter(cty >= 20, manufacturer == "audi")
+
+mpg[mpg$cty >= 20 & mpg$manufacturer == "audi", ]
+```
+
+`arrange()` sorts a data frame by the given variables
+
+```{r}
+
+mpg %>%
+  select(manufacturer, year) %>%
+  distinct() %>%
+  arrange(year, manufacturer)
+
+tmp <- mpg[, c("manufacturer", "year")]
+
+tmp <- unique(tmp)
+
+tmp[order(tmp$year, tmp$manufacturer), ]
+```
+
+Note the use of `distinct()` above which only returns the unique rows of a data frame. 
+
+you can also alternate between sorting by ascending or descending, a difficult operation in `R` when the columns are not numeric
+
+```{r}
+
+mpg %>%
+  select(manufacturer, year) %>%
+  distinct() %>%
+  arrange(year, desc(manufacturer))
+```
+
+`group_by()` and `summarize()` can be used in conjunction to manipulate a data frame separately by a given variable (group), and summarize the results within each group.
+
+```{r}
+
+mpg %>%
+  group_by(year)
+
+mpg %>%
+  group_by(year) %>%
+  summarize(
+    count = n(),
+    distinct = n_distinct(manufacturer, cyl),
+    avg_cty = mean(cty),
+    max_hwy = max(hwy)
+  )
+```
+
+note again the use of `n()` above and `n_distinct()` which returns the number of distinct values.
+
+grouping by a variable can make extracting certain data rows easy as well
+
+```{r}
+mpg %>%
+  group_by(manufacturer) %>%
+  filter(cty == max(cty)) %>%
+  ungroup()
+```
+
+additionally, we can apply operations within groups
+
+```{r}
+
+mpg %>%
+  group_by(year) %>%
+  mutate(
+    avg_cty = mean(cty),
+    diff = cty - avg_cty
+  ) %>%
+  select(year, manufacturer, model, cty, avg_cty, diff) %>%
+  ungroup()
+```
+
+## joins
+
+`dplyr` provides a great set of functions for joining data frames
+
+```{r}
+
+# 4 cylinders
+mpg_4 <- mpg %>%
+  filter(cyl == 4) %>%
+  select(manufacturer, cty) %>%
+  group_by(manufacturer) %>%
+  summarize(avg_cty = mean(cty)) %>%
+  ungroup()
+
+mpg_4
+
+# 8 cylinders
+mpg_8 <- mpg %>%
+  filter(cyl == 8) %>%
+  select(manufacturer, cty) %>%
+  group_by(manufacturer) %>%
+  summarize(avg_cty = mean(cty)) %>%
+  ungroup()
+
+mpg_8
+
+
+inner_join(
+  mpg_4,
+  mpg_8,
+  by = "manufacturer",
+  suffix = c("_4", "_8")
+)
+
+left_join(
+  mpg_4,
+  mpg_8,
+  by = "manufacturer",
+  suffix = c("_4", "_8")
+)
+
+semi_join(
+  mpg_4,
+  mpg_8,
+  by = "manufacturer"
+)
+
+anti_join(
+  mpg_4,
+  mpg_8,
+  by = "manufacturer"
+)
+```
+
+# `tidyr` data manipulation
+
+`tidyr` provides functions which make converting data from wide to long and vice-versa intuitive
+
+```{r}
+
+# long to wide
+tmp <- mpg %>%
+  select(manufacturer, cyl, cty) %>%
+  group_by(manufacturer, cyl) %>%
+  summarize(avg_cty = mean(cty)) %>%
+  ungroup()
+
+tmp
+
+tmp <- tmp %>%
+  spread(
+    key = cyl,
+    value = avg_cty
+  )
+
+tmp
+
+# wide to long
+tmp %>%
+  gather(
+    key = cylinders,
+    value = city_mpg,
+    `4`, `5`, `6`, `8`
+  )
+```
+
+
+# Dates
+
+Dates are another common type of data you will need to work with in R. 
+Unlike other data types, dates have many different variants. R's general date format is YYYY-MM-DD format or it can go further and have YYYY-MM-DD HH:MM:SS (datetime). You can switch the order of the date parts but you have to specify where each part is located. Other notes: 
+
+* You can convert characters and numbers to dates and vice versa. 
+* Each  component can have different ways of being presented (e.g Month can be 01, Jan, or January)
+
+# Factors
+
+Look through [forcats](https://forcats.tidyverse.org/) package. Nice tools to make, reorder, relevel factors in a tidy way. 
+
+# Labels
+
+Recommend using the `labelled::set_variable_labels()` function to label data frames after prep. 
+
+
+# NA vs NULL
+
+A confusing topic but in general NA is a missing value indicator where NULL means undefined. People will encounter NA way more often than NULL. NAs are often represented in dataframes and vectors, where NULL will not be in either of those structures. 
+
+```{r NA NULL}
+x <- c(1, 2, NA, NULL)
+#in x you can see that NULL does not appear 
+#because it stands for undefined in cannot exist
+#in a vector of numbers
+#However, NA does exist because it simply stands for unknown and not undefiend. In this case we know NA stands for a number but we just don't know the value. 
+x
+```
+
+# Style Guide
+
+Read the [tidyverse style guide](https://style.tidyverse.org/) for good coding guidelines! 
+
+
+
+While that was a basic intro to the difference if you want to know more this is a great blog post:
+https://www.r-bloggers.com/r-na-vs-null/
+
+# references
+
+  - https://www.tidyverse.org/
+  - http://r4ds.had.co.nz/
+
+
+
+Credit: Much of this presentation borrowed materials originally prepared by: Mike Curry, Daniel Sjoberg, Emily Zabor, and Patrick Hilden. Many thanks! 
+
