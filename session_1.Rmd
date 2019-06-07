@@ -578,6 +578,8 @@ Unlike other data types, dates have many different variants. R's general date fo
 * You can convert characters and numbers to dates and vice versa. 
 * Each  component can have different ways of being presented (e.g Month can be 01, Jan, or January)
 
+Use [lubridate](https://lubridate.tidyverse.org/) for date manipulation! 
+
 # Factors
 
 Look through [forcats](https://forcats.tidyverse.org/) package. Nice tools to make, reorder, relevel factors in a tidy way. 
