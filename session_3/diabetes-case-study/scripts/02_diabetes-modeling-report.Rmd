@@ -1,0 +1,270 @@
+---
+title: "Diabetes Risk Factors Analysis"
+author: "Karissa Whiting"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: paper
+    toc: yes
+    toc_float: yes
+fontsize: 12pt
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(gtsummary)
+library(labelled)
+library(here)
+```
+
+```{r}
+load(here("data", "diabetes.RData"))
+```
+
+# Methods
+
+Insert methods here....
+
+# Results
+
+```{r}
+# function to turn df names to labels
+make_labels <- function(names) {
+  str_replace_all(names, "_", " ") %>%
+    str_to_title() %>%
+    return
+}
+
+# Prep data -------------
+df <- df %>%
+  
+# make diabetes binary variable (hemoglobin > 7 is considered diabetic)
+  mutate(
+    diabetes = case_when(
+      glyhb >= 7 ~ "Diabetes", 
+      glyhb < 7 ~ "No Diabetes", 
+      TRUE ~ NA_character_ )) %>% 
+    
+  # TODO - make variable called diabetes_bin that codes "Diabetes" as 1 and "No Diabetes" as 0
+  #  diabetes_bin = ) %>%
+  
+  #TODO-  make a new variable waist_hip_ratio
+  #?????????????? %>% 
+  
+  # deselect unwanted variables 
+  select(-id, -bp_2s, -bp_2d, -bp_1d, -bp_1s,
+         -time_ppn, -waist, -hip)
+
+
+```
+
+- This data set contains `r nrow(df)` observations of individuals with data on risk factors for diabetes. 
+- There are `r nrow(df %>% filter(diabetes == "Diabetes"))` individuals with diabetes and `r nrow(df %>% filter(diabetes == "No Diabetes"))` individuals without diabetes in this data set. 
+
+<br>
+
+```{r }
+# table 1 of patient characteristics
+df %>%
+  set_variable_labels(.labels = make_labels(names(.))) %>%
+  filter(!is.na(diabetes)) %>%
+  tbl_summary(by = "diabetes") %>%
+  add_p() %>%
+  tab_style_bold_labels() %>%
+  tab_style_italicize_levels() %>%
+  as_gt() %>%
+  tab_options(
+    table.font.size = "small",
+    row.padding = gt::px(1)) %>%
+  tab_header(title = "Patient Characteristics By Diabetes Status")
+  
+```
+
+<br> 
+
+```{r }
+
+# plot distributions of numeric variables
+df %>%
+  select(diabetes, age, chol, hdl, height, 
+            ratio_chol_hdl, 
+            stabilized_glucose, waist_hip_ratio, 
+            weight) %>%
+  gather(key, value, -diabetes) %>%
+  ggplot(aes(x = value, fill = diabetes), alpha = .5) + 
+  geom_histogram()  +
+  facet_wrap(~key, scales = "free") + theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  ggtitle("Continuous Variables by Diabetes Status")
+```
+
+<br>
+
+```{r}
+
+# plot univariate regressions continuous 
+df %>%
+  select(age, chol, hdl, height, 
+            ratio_chol_hdl, 
+            stabilized_glucose, waist_hip_ratio, 
+            weight, glyhb)  %>%
+  gather(key, value, -"glyhb") %>%
+  ggplot(aes(x = value, y = glyhb, color = key)) + 
+  geom_point(alpha = .3, size = .8)  +
+  geom_smooth(method='lm') +
+  facet_wrap(~key, scales = "free") + theme_minimal() +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  ggtitle("Continuous Variables by Hemoglobin Levels")
+
+```
+
+<br>
+
+```{r}
+# plot outcome by factor 
+df %>%
+  select(gender, location, frame, glyhb) %>%
+  gather(key, value, -"glyhb") %>%
+  ggplot(aes(x = value, y = glyhb, fill = key)) + 
+  geom_boxplot(alpha = .3, size = .8)  +
+  facet_wrap(~key, scales = "free") + theme_minimal() +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))  + 
+  ggtitle("Categorical Variables by Hemoglobin Levels")
+```
+
+<br>
+
+## Linear Model 
+
+### Univariate Regressions
+
+```{r}
+# univariate regressions
+
+df %>%
+  set_variable_labels(.labels = make_labels(names(.))) %>%
+  select(-diabetes, -diabetes_bin) %>%
+  tbl_uvregression(method = lm, 
+                   y = glyhb) %>%
+  tab_style_bold_labels() %>%
+  tab_style_italicize_levels() %>%
+  as_gt() %>%
+  tab_options(
+    table.font.size = "small",
+    row.padding = gt::px(1)) %>%
+  tab_header(title = "Univariate Regression Coefficients")
+  
+```
+
+### Multivariate Regressions
+
+```{r}
+# multivariate model
+
+# set labels for table display
+df <- df %>%
+  set_variable_labels(.labels = make_labels(names(.))) 
+
+# build the model
+multi_lm <- lm(glyhb ~ ratio_chol_hdl +
+                 stabilized_glucose +
+                 age + weight + waist_hip_ratio, data = df)
+
+#tidy(multi_lm)
+
+# display tidy model results
+multi_lm %>%
+  tbl_regression() %>%
+  tab_style_bold_labels() %>%
+  tab_style_italicize_levels() %>%
+  as_gt() %>%
+  tab_options(
+    table.font.size = "small",
+    row.padding = gt::px(1)) %>%
+  tab_header(title = "Multivariate Model")
+
+```
+
+
+<br> 
+
+```{r}
+pred <- predict(multi_lm)
+
+obs <- df %>%
+  select(glyhb, ratio_chol_hdl, stabilized_glucose, 
+         age, weight, waist_hip_ratio) %>%
+  na.omit() %>% # because model will omit observations that have na
+  pull(glyhb)
+
+mod_results <- bind_cols(predicted = pred, 
+                         observed = obs)
+
+ggplot(mod_results, aes(x = observed, y = predicted)) +
+  geom_point(color = "skyblue3") +
+  theme_minimal() +
+  ggtitle("Observed vs. Fitted Glyhb Values")
+```
+
+<br>
+
+## Logistic Model
+
+### Univariate Regressions
+
+```{r }
+
+# univariate coefficients - exponentiate to get OR's
+df %>%
+  set_variable_labels(.labels = make_labels(names(.))) %>%
+  select(-glyhb, -diabetes) %>%
+  tbl_uvregression(method = glm, 
+                   y = diabetes_bin, 
+                   method.args = list(family = binomial), 
+                   exponentiate = TRUE) %>%
+  tab_style_bold_labels() %>%
+  tab_style_italicize_levels() %>%
+  as_gt() %>%
+  tab_options(
+    table.font.size = "small",
+    row.padding = gt::px(1)) %>%
+  tab_header(title = "Univariate Regression Coefficients")
+  
+```
+
+
+### Multivariate Regressions
+
+```{r}
+# multivariate model
+
+# create labels for reporting table
+df <- df %>%
+  set_variable_labels(.labels = make_labels(names(.))) 
+
+# build model
+multi_lm <- glm(diabetes_bin ~ ratio_chol_hdl +
+                 stabilized_glucose +
+                 age + weight + waist_hip_ratio, data = df, 
+                family = binomial)
+
+
+# display tidy model results
+multi_lm %>%
+  tbl_regression(exponentiate = TRUE) %>%
+  tab_style_bold_labels() %>%
+  tab_style_italicize_levels() %>%
+  as_gt() %>%
+  tab_options(
+    table.font.size = "small",
+    row.padding = gt::px(1)) %>%
+  tab_header(title = "Multivariate Model")
+
+```
+

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>R Analysis Workflow</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Karissa Whiting" />
+    <meta name="date" content="2019-06-13" />
+    <link href="presentation_files/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="presentation_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# R Analysis Workflow
+## MSK QSURE R Training, Session 3
+### Karissa Whiting
+### June 13, 2019
+
+---
+
+
+
+
+
+
+# Outline
+
+- Overview of R Workflow
+
+- Linear &amp; Logistic Regression Case Study
+
+- Functions
+
+- Git/ Github 
+
+- *Not covered but will provide code:* 
+    - Code for cleaning data with dates
+    - Linear Mixed Effects Models
+    - Shiny Apps
+
+---
+
+# The R Analysis Workflow
+
+- Clean and Explore Data
+    - `dplyr`
+    - `lubridate` 
+- Analyze it
+    - `stats`
+    - `survival`
+    - `lme4`/ `lmer`
+    - `ggplot` 
+- Report Your Findings
+    - R Markdown / `knitr`
+    - `gt` / `gtsummary`
+    - `broom` 
+- Iterate, Share, and Collaborate!
+    - `git`/ `github`
+    - `devtools` &amp; `usethis`
+
+
+---
+# Case Study - Modeling Diabetes Risk Factors
+
+- Analyze risk factors for diabetes
+- Is waist to hip ratio a risk factor for diabetes?
+
+- Outcome: glycosolated hemoglobin level (&gt; 7 is considered diabetic)
+
+- Available Variables of interest: 
+    - cholesterol level 
+    - stabilized glucose
+    - location of individual
+    - age
+    - gender
+    - height/weight
+    - body frame
+    - waist in inches
+    - hip in inches
+    
+
+```r
+library(faraway)
+?diabetes
+```
+
+---
+# Reproducibility 
+
+*Why is a Reproducible R Workflow Important?*
+
+---
+# Reproducibility 
+
+*Why is a Reproducible R Workflow Important?*
+- Allows you to show evidence of your results
+
+- Encourages transparency about decisions made during analysis
+
+- Enables others to check and use/extend your methods and results
+
+- Enables FUTURE YOU to check and use/extend your methods and results
+
+---
+# Reproducibility 
+
+*How do we ensure our R code is reproducible?*
+- Have a clear project workflow structure
+
+- Comment and document your code
+
+- Use reproducible reporting practice (e.g. Rmd inline text)
+
+- Avoid absolute file paths (e.g. `~/Users/Whiting/Projects...`)
+
+- Version control (document changes you make, or use git!)
+
+- Read More: https://ropensci.github.io/reproducibility-guide/
+
+---
+# Why Write a Function? 
+
+- D.R.Y. - limit copy pasting and potential mistakes 
+
+- Automate common tasks 
+
+- You only need to update code in one place 
+
+
+---
+# Function Tips 
+
+- If you are copy pasting code &gt; 3 times, write a function
+
+- Give your function a useful name 
+
+
+---
+# Function Example 
+
+
+```r
+add_one &lt;- function(number) {
+  result = number + 1 
+  return(result)
+}
+
+add_one(7)
+```
+
+```
+## [1] 8
+```
+
+```r
+#add_one("hai")
+```
+
+---
+# Function Practice
+
+Write a function to calculate BMI given height (inchs) and weight (lbs) 
+
+BMI = (weight * 703) / (height)^2 
+
+
+```r
+calc_bmi &lt;- function() {
+  ?????????????
+}
+```
+
+
+
+---
+# Git and Github 
+
+&lt;img src="./git-meme.jpg" width="800" /&gt;
+
+
+---
+# Git and Github 
+
+
+
+- *Git* is version control software that records changes to a file/ project. 
+    - View specific changes to code over time
+    
+    - Revert files to past states as needed
+    
+- *Github* web-based UI and social platform that works on top of git.
+    - Upload your code so others can view and contribute to it
+     
+    - View and contribute to other projects
+
+    
+    
+---
+# Git and Github 
+
+
+- *Git* is version control software that records changes to a file/ project. 
+    - View specific changes to code over time
+    
+    - Revert files to past states as needed
+    
+- *Github* web-based UI and social platform that works on top of git.
+    - Upload your code so others can view and contribute to it
+     
+    - View and contribute to other projects
+
+- **NOTE: DON'T PUT CODE OR DATA ON GITHUB IF PROJECT USES PROTECTED DATA**
+
+---
+# Git and Github 
+
+&lt;img src="./git-push-pull.png" width="3069" /&gt;
+
+---
+# Last Notes 
+
+- Stack Overflow is your friend: https://stackoverflow.com/
+
+- Help eachother! (but also learn how to read R documentation)
+
+- Stay in the loop
+    - Rbloggers: https://www.r-bloggers.com/
+    - Twitter: @hadleywickham, @JennyBryan, #rstats
+    
+- Get involved
+    - Start a github account
+    - Make a package
+    
+---
+# THANK YOU!!
+
+&lt;img src="./r-cars.jpg" width="2560" /&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create();
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
