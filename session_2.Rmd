@@ -1,0 +1,270 @@
+---
+title: "R Markdown and Data Presentation"
+author: "Mike Curry, Margie Hannum, and Karissa Whiting"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple document for 
+authoring HTML, PDF, and MS Word documents. For more details on using R 
+Markdown see <http://rmarkdown.rstudio.com> and <http://www.rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf>.
+
+Using markdown allows for your research and analysis to become more reproducible. Having both text and code in the same document easily allows you to know what the purpose of the document is and how you achieved your analytic results. This allows others to follow your work with ease. 
+
+You can name chunks. The name below is setup for this block of code. You cannot
+repeat names for chunks. 
+
+```{r setup, include=TRUE}
+
+#what my current options look like for this demo
+#two ways to specify options for rmarkdown
+
+knitr::opts_chunk$set(
+	eval = TRUE,
+	echo = TRUE,
+	fig.height = 6,
+	fig.width = 8,
+	message = FALSE,
+	warning = FALSE,
+	comment = NA,
+	results = "asis"
+)
+options(xtable.comment = FALSE)
+#what options might look like for giving results to people
+
+# knitr::opts_chunk$set(fig.width=3, fig.height=4, echo=FALSE,
+# warning=FALSE, message=FALSE,  comment= FALSE, results='asis',eval=TRUE)
+
+
+library(tidyverse)
+library(survival)
+library(broom)
+library(gt)
+
+```
+
+
+If you want to see more options for the opts_chunk follow this link:
+<https://yihui.name/knitr/options/>. 
+
+## Using the document and other coding languages
+
+* If you knit to pdf or html you can embed code latex code for pdf documents and html code for html documents. I don't often do this but it is here if you need it. 
+
+An example. 
+
+<dl>
+  <dt> Definition list </dt>
+  <dd>Is <b>something</b> people use sometimes.</dd>
+
+  <dt>Markdown in HTML</dt>
+  <dd>Does *not* work **very** well. Use HTML <em>tags</em>.</dd>
+</dl>
+
+Include packages and data but don't show code. 
+
+```{r data, include=FALSE}
+
+
+gender_table <- lung %>% 
+       count(sex) %>% 
+       filter(sex == 1) 
+
+msg <- "I like R"
+
+```
+
+
+## Inline R code 
+
+You can specify R code in paragraphs and sentences to help make your document more reproducible. Instead of changing each number in your paper you can just code it into the paragraph so you do not have to keep updating numbers and figures in the paper (when things change). For example there are `r nrow(lung)` patients in the data. There are `r gender_table[[1,2]]`  females and `r table(lung$sex)[[2]]` males. You can also put in text strings as well- `r msg`.   
+
+
+## Creating a table
+
+Often it is important to print summary results in a meaningful way. Here is a way to create tables in R. There are many other ways as well. I will show a few examples. Somne common/older approaches are knitr::kable and xtable::xtable. However there is a newer (as of 6/6/2019) package that has a lot of promise called gt. The gt package allows for additional visually appeasing customizations. 
+
+### Simple example
+
+```{r tables}
+
+demos <- count(lung, status, sex) %>% 
+         transmute(`Death Indicator`= status,
+                Gender = sex,
+                Count = n)
+#kable works well with html and word outputs
+knitr::kable(demos)
+
+#xtable works well with all but looks best with pdf 
+print(xtable::xtable(demos),type = "html", include.rownames = FALSE)
+
+#newest option
+gt::gt(demos) %>% 
+    gt::tab_header(title = "A title", subtitle = "A subtitle") 
+    
+demos2 <- lung %>% 
+          count(status,sex) %>% 
+          spread(sex,n)
+
+
+gt::gt(demos2) %>% 
+      gt::tab_spanner("Gender", vars(`1`,`2`)) %>% 
+      gt::tab_stubhead_label(label = "Death")
+
+
+###making improvements to the table
+demos2a <- lung %>% 
+          count(status,sex) %>% 
+          mutate(sex = ifelse(sex ==1 , "Female", "Male"),
+                 status = ifelse(status == 1, "Alive","Dead")) %>% 
+          spread(sex,n)
+
+gt::gt(demos2a, rowname_col = 'status') %>% 
+      gt::tab_spanner("Gender", vars('Female','Male')) %>% 
+      gt::tab_stubhead_label(label = "Status")
+
+
+
+```
+
+
+<https://github.com/rstudio/gt> 
+
+## Plotting in R
+
+But first choosing the right plot:
+
+<https://www.reddit.com/r/lifehacks/comments/3yiea4/choose_the_right_chart_to_illustrate_your_point/>
+
+*ggplot2* - one of the most common ways to plot in R. Best when used with data.frames. 
+
+When using ggplot I generally start with creating my own aggregated data. This allows you to know exactly what you are plotting. 
+
+### Plots
+
+3 major parts - geom_, scale_, and theme_ (underscore here means there are multiple options for each major component)
+
+  + geoms allow you to specify what type of graph you want to make (bar,line, etc.)
+
+  + scales allow you to specify options for what is defined in the geoms
+  
+  + theme changes things like background color, fonts, and labels 
+
+<https://ggplot2.tidyverse.org/reference/> 
+
+```{r plts, fig.align = 'center', fig.height=8, fig.width=6,dpi=600}
+
+#compare between two groups - notice status and sex are discrete with a 
+#cont outcome (percent)
+
+p1 <- lung %>% 
+      mutate(sex = ifelse(sex ==1 , "Female", "Male"),
+                 status = ifelse(status == 1, "Alive","Dead")) %>% 
+      count(sex, status) %>% 
+      group_by(sex) %>% 
+      mutate(Percent = 100*n/sum(n))
+
+
+ggplot(p1) +
+    geom_bar(aes(x=sex, y = Percent ,fill = status), stat = 'identity') +
+    scale_x_discrete("Gender") +
+    scale_fill_discrete("Status") +
+    theme_bw()
+
+
+##trend over time
+
+p3 <- lung %>% 
+      mutate(time2 = ifelse(time <= 250, 1,
+                     ifelse(time >=251 & time <= 500, 2,
+                     ifelse(time >= 501 & time <= 750, 3, 4))),
+             sex = ifelse(sex ==1 , "Female", "Male")) %>% 
+      group_by(time2, sex) %>% 
+      summarise(ph_karno_mean = mean(ph.karno,na.rm = TRUE))
+
+ggplot(p3) +
+    geom_line(aes(x = time2, y = ph_karno_mean, color = sex),size = 2) + 
+    scale_y_continuous("Ph Karno Average", limits = c(0,100)) +
+    scale_x_continuous("Time", labels = c("0-250","251-500","501-750","750+")) +
+    theme_bw() +
+    theme(axis.text.x = element_text(size =16),
+          axis.title.x = element_text(size = 20))
+
+###facet plots
+#sometimes you need to display a lot of data and it is too busy for one pane
+#facet_wrap and facet_grid come in handy for this
+
+
+
+p4 <- lung %>% 
+      mutate(time2 = ifelse(time <= 250, 1,
+                     ifelse(time >=251 & time <= 500, 2,
+                     ifelse(time >= 501 & time <= 750, 3, 4))),
+             sex = ifelse(sex ==1 , "Female", "Male"),
+             status = ifelse(status == 1, "Alive","Dead")) %>% 
+      group_by(time2, sex, status) %>% 
+      summarise(ph_karno_mean = mean(ph.karno,na.rm = TRUE))
+
+ggplot(p4) +
+    geom_line(aes(x = time2, y = ph_karno_mean, color = sex),size = 2) + 
+    facet_wrap(~status)+
+    scale_y_continuous("Ph Karno Average", limits = c(0,100))+
+    scale_x_continuous("Time", labels = c("0-250","251-500","501-750","750+"))+
+    theme_bw()+
+    theme(axis.text.x = element_text(size =16, angle = 45, hjust = 1),
+          axis.title.x = element_text(size = 20))
+
+
+###simple histogram
+
+ggplot(lung)+
+    geom_histogram(aes(x = time), bins = 15)
+
+```
+
++ More advanced topics for plotting include using packages grid and gridExtra and nesting plots within plots. 
+
+## Introduction to Broom
+
+Broom is a package that neatly extracts model information into a dataframe. This is helpful when plotting and or presenting model results in a table. 
+
+
+```{r broom}
+
+surv_mod <- survfit(Surv(time,status==1)~sex,data = lung)
+
+surv_mod_df <- broom::tidy(surv_mod)
+
+#basic survival plot
+# I left this one bare bones, if you want you can modify within the dataframes 
+#scale_ and theme_ to make the plot nicer
+ggplot(surv_mod_df) + 
+    geom_line(aes(x = time, y = estimate, color = strata),size = 2)
+
+
+cmod <- coxph(Surv(time,status==1)~ as.character(sex) ,data = lung)
+
+cmod_df <- broom::tidy(cmod) %>% 
+           mutate(HR = round(exp(estimate),2),
+                  Lower = round(exp(conf.low),2),
+                  Upper = round(exp(conf.high),2)) %>% 
+          select(term, HR, Lower, Upper)
+
+#more options for HR forest plot
+ggplot(cmod_df) + 
+    geom_point(aes(x=term, y=HR), size = 4) +
+    geom_errorbar(aes(x=term, ymin = Lower,ymax = Upper), size = 2) +
+    geom_hline(yintercept =  1, size = 2) +
+    coord_flip() +
+    scale_y_continuous("Hazard Ratio") +
+    scale_x_discrete("Gender", label = "Male vs. Female") +
+    theme_bw()
+
+
+```
+
