@@ -1,6 +1,6 @@
 ---
 title: "QSURE R Training: Session 1"
-author: "Margie Hannum"
+author: "Margie Hannum, Mike Curry, Karissa Whiting"
 output: 
   html_document:
     toc: TRUE
